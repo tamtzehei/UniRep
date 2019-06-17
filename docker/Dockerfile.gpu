@@ -1,6 +1,6 @@
 FROM tensorflow/tensorflow:1.3.0-gpu-py3
 
-ADD requirements/requirements-py3.txt /install/requirements-py3.txt
+ADD /home/tzehei/Documents/FL65/UniRep/requirements/requirements-py3.txt /install/requirements-py3.txt
 RUN pip install --upgrade pip
 RUN pip install --no-cache-dir -r /install/requirements-py3.txt
 
