@@ -134,7 +134,7 @@ def fasta_to_input_format(source, destination):
     # Should go line by line so everything is not loaded into memory
     
     sourcefile = os.path.join(source)
-    destination = os.path.join(destiation)
+    destination = os.path.join(destination)
     with open(sourcefile, 'r') as f:
         with open(destination, 'w') as dest:
             seq = ""
@@ -215,3 +215,57 @@ def shufflebatch(
     dataset = dataset.repeat(count=repeat)
     dataset = dataset.batch(batch_size)
     return dataset
+
+# Functions from babbler1900 being moved to allow use of estimators
+
+def is_valid_seq(self, seq, max_len=2000):
+    """
+    True if seq is valid for the babbler, False otherwise.
+    """
+    l = len(seq)
+    valid_aas = "MRHKDESTNQCUGPAVIFYWLO"
+    if (l < max_len) and set(seq) <= set(valid_aas):
+        return True
+    else:
+        return False
+
+
+def format_seq(self,seq,stop=False):
+    """
+    Takes an amino acid sequence, returns a list of integers in the codex of the babbler.
+    Here, the default is to strip the stop symbol (stop=False) which would have
+    otherwise been added to the end of the sequence. If you are trying to generate
+    a rep, do not include the stop. It is probably best to ignore the stop if you are
+    co-tuning the babbler and a top model as well.
+    """
+    if stop:
+        int_seq = aa_seq_to_int(seq.strip())
+    else:
+        int_seq = aa_seq_to_int(seq.strip())[:-1]
+    return int_seq
+
+def bucket_batch_pad(self,filepath, upper=2000, lower=50, interval=10):
+    """
+    Read sequences from a filepath, batch them into buckets of similar lengths, and
+    pad out to the longest sequence.
+    Upper, lower and interval define how the buckets are created.
+    Any sequence shorter than lower will be grouped together, as with any greater
+    than upper. Interval defines the "walls" of all the other buckets.
+    WARNING: Define large intervals for small datasets because the default behavior
+    is to repeat the same sequence to fill a batch. If there is only one sequence
+    within a bucket, it will be repeated batch_size -1 times to fill the batch.
+    """
+    self._bucket_upper = upper
+    self._bucket_lower = lower
+    self._bucket_interval = interval
+    self._bucket = [self._bucket_lower + (i * self._bucket_interval) for i in range(int(self._bucket_upper / self._bucket_interval))]
+    self._bucket_batch =  bucketbatchpad(
+                batch_size=self._batch_size,
+                pad_shape=([None]),
+                window_size=self._batch_size,
+                bounds=self._bucket,
+                path_to_data=filepath,
+                shuffle_buffer=self._shuffle_buffer,
+                repeat=None
+    ).make_one_shot_iterator().get_next()
+    return self._bucket_batch

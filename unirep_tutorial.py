@@ -7,15 +7,15 @@
 
 # Use the 64-unit or the 1900-unit model?
 
-# In[2]:
+# In[1]:
 
 
-USE_FULL_1900_DIM_MODEL = False # if True use 1900 dimensional model, else use 64 dimensional one.
+USE_FULL_1900_DIM_MODEL = True # if True use 1900 dimensional model, else use 64 dimensional one.
 
 
 # ## Setup
 
-# In[3]:
+# In[2]:
 
 
 import tensorflow as tf
