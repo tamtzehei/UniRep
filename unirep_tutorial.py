@@ -10,7 +10,7 @@
 # In[1]:
 
 
-USE_FULL_1900_DIM_MODEL = True # if True use 1900 dimensional model, else use 64 dimensional one.
+USE_FULL_1900_DIM_MODEL = False # if True use 1900 dimensional model, else use 64 dimensional one.
 
 
 # ## Setup
@@ -50,7 +50,7 @@ else:
 
 # Initialize UniRep, also referred to as the "babbler" in our code. You need to provide the batch size you will use and the path to the weight directory.
 
-# In[4]:
+# In[3]:
 
 
 batch_size = 12
@@ -59,13 +59,13 @@ b = babbler(batch_size=batch_size, model_path=MODEL_WEIGHT_PATH)
 
 # UniRep needs to receive data in the correct format, a (batch_size, max_seq_len) matrix with integer values, where the integers correspond to an amino acid label at that position, and the end of the sequence is padded with 0s until the max sequence length to form a non-ragged rectangular matrix. We provide a formatting function to translate a string of amino acids into a list of integers with the correct codex:
 
-# In[5]:
+# In[4]:
 
 
 seq = "MRKGEELFTGVVPILVELDGDVNGHKFSVRGEGEGDATNGKLTLKFICTTGKLPVPWPTLVTTLTYGVQCFARYPDHMKQHDFFKSAMPEGYVQERTISFKDDGTYKTRAEVKFEGDTLVNRIELKGIDFKEDGNILGHKLEYNFNSHNVYITADKQKNGIKANFKIRHNVEDGSVQLADHYQQNTPIGDGPVLLPDNHYLSTQSVLSKDPNEKRDHMVLLEFVTAAGITHGMDELYK"
 
 
-# In[6]:
+# In[5]:
 
 
 np.array(b.format_seq(seq))
@@ -73,7 +73,7 @@ np.array(b.format_seq(seq))
 
 # We also provide a function that will check your amino acid sequences don't contain any characters which will break the UniRep model.
 
-# In[7]:
+# In[6]:
 
 
 b.is_valid_seq(seq)
@@ -85,7 +85,7 @@ b.is_valid_seq(seq)
 # 
 # Sequence formatting can be done as follows:
 
-# In[9]:
+# In[7]:
 
 
 # Before you can train your model, 
@@ -101,7 +101,7 @@ with open("seqs.txt", "r") as source:
 
 # This is what the integer format looks like
 
-# In[10]:
+# In[8]:
 
 
 get_ipython().system('head -n1 formatted.txt')
@@ -119,7 +119,7 @@ get_ipython().system('head -n1 formatted.txt')
 # - Automatically padding the sequences with zeros so the returned batch is a perfect rectangle
 # - Automatically repeating the dataset
 
-# In[11]:
+# In[9]:
 
 
 bucket_op = b.bucket_batch_pad("formatted.txt", interval=1000) # Large interval
@@ -129,13 +129,17 @@ bucket_op = b.bucket_batch_pad("formatted.txt", interval=1000) # Large interval
 
 # Now that we have the `bucket_op`, we can simply `sess.run()` it to get a correctly formatted batch
 
-# In[12]:
+# In[14]:
 
 
 with tf.Session() as sess:
     sess.run(tf.global_variables_initializer())
     batch = sess.run(bucket_op)
     
+with open('batch.txt', 'w') as f:
+    for seq in batch:
+        f.write(str(seq))
+            
 print(batch)
 print(batch.shape)
 

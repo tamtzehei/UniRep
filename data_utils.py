@@ -173,7 +173,7 @@ def bucketbatchpad(
     
     path_to_data = os.path.join(path_to_data)
     # Parse strings to tensors
-    dataset = tf.contrib.data.TextLineDataset(path_to_data).map(tf_seq_to_tensor)
+    dataset = tf.data.TextLineDataset(path_to_data).map(tf_seq_to_tensor)
     if filt is not None:
         dataset = dataset.filter(filt)
 
@@ -184,10 +184,10 @@ def bucketbatchpad(
     # See https://stackoverflow.com/questions/44132307/tf-contrib-data-dataset-repeat-with-shuffle-notice-epoch-end-mixed-epochs
     dataset = dataset.repeat(count=repeat)
     # Apply grouping to bucket and pad
-    grouped_dataset = dataset.group_by_window(
+    grouped_dataset = dataset.apply(tf.data.experimental.group_by_window(
         key_func=lambda seq: smart_length(tf_rank1_tensor_len(seq), bucket_bounds=bounds), # choose a bucket
         reduce_func=lambda key, ds: pad_batch(ds, batch_size, padding=padding, padded_shapes=pad_shape), # apply reduce funtion to pad
-        window_size=window_size)
+        window_size=window_size))
 
 
         
@@ -218,7 +218,7 @@ def shufflebatch(
 
 # Functions from babbler1900 being moved to allow use of estimators
 
-def is_valid_seq(self, seq, max_len=2000):
+def is_valid_seq(seq, max_len=2000):
     """
     True if seq is valid for the babbler, False otherwise.
     """
@@ -230,7 +230,7 @@ def is_valid_seq(self, seq, max_len=2000):
         return False
 
 
-def format_seq(self,seq,stop=False):
+def format_seq(seq,stop=False):
     """
     Takes an amino acid sequence, returns a list of integers in the codex of the babbler.
     Here, the default is to strip the stop symbol (stop=False) which would have
@@ -244,7 +244,7 @@ def format_seq(self,seq,stop=False):
         int_seq = aa_seq_to_int(seq.strip())[:-1]
     return int_seq
 
-def bucket_batch_pad(self,filepath, upper=2000, lower=50, interval=10):
+def bucket_batch_pad(filepath, batch_size=12, shuffle_buffer=10000, upper=2000, lower=50, interval=10):
     """
     Read sequences from a filepath, batch them into buckets of similar lengths, and
     pad out to the longest sequence.
@@ -255,17 +255,15 @@ def bucket_batch_pad(self,filepath, upper=2000, lower=50, interval=10):
     is to repeat the same sequence to fill a batch. If there is only one sequence
     within a bucket, it will be repeated batch_size -1 times to fill the batch.
     """
-    self._bucket_upper = upper
-    self._bucket_lower = lower
-    self._bucket_interval = interval
-    self._bucket = [self._bucket_lower + (i * self._bucket_interval) for i in range(int(self._bucket_upper / self._bucket_interval))]
-    self._bucket_batch =  bucketbatchpad(
-                batch_size=self._batch_size,
+
+    bucket = [lower + (i * interval) for i in range(int(upper / interval))]
+    bucket_batch =  bucketbatchpad(
+                batch_size=batch_size,
                 pad_shape=([None]),
-                window_size=self._batch_size,
-                bounds=self._bucket,
+                window_size=batch_size,
+                bounds=bucket,
                 path_to_data=filepath,
-                shuffle_buffer=self._shuffle_buffer,
+                shuffle_buffer=shuffle_buffer,
                 repeat=None
     ).make_one_shot_iterator().get_next()
-    return self._bucket_batch
+    return bucket_batch

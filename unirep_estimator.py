@@ -45,64 +45,67 @@ def model_fn(features, labels, mode, params):
 
     # Predict
     if mode == Modes.PREDICT:
-        model.get_rep()
+        for seq in features:
+            model.get_rep(seq)
         return tf.estimator.EstimatorSpec
-    # Train
-    if mode == Modes.TRAIN:
 
+    # Train and Evaluate
+    final_hidden, x_placeholder, batch_size_placeholder, seq_length_placeholder, initial_state_placeholder = (
+        model.get_rep_ops())
 
+    y_placeholder = tf.placeholder(tf.float32, shape=[None, 1], name="y")
+    initializer = tf.contrib.layers.xavier_initializer(uniform=False)
 
-        final_hidden, x_placeholder, batch_size_placeholder, seq_length_placeholder, initial_state_placeholder = (
-            model.get_rep_ops())
+    with tf.variable_scope("top"):
+        prediction = tf.contrib.layers.fully_connected(
+            final_hidden, 1, activation_fn=None,
+            weights_initializer=initializer,
+            biases_initializer=tf.zeros_initializer()
+        )
 
-        y_placeholder = tf.placeholder(tf.float32, shape=[None, 1], name="y")
-        initializer = tf.contrib.layers.xavier_initializer(uniform=False)
+    loss = tf.losses.mean_squared_error(y_placeholder, prediction)
+    learning_rate = .001
+    top_variables = tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope="top")
+    optimizer = tf.train.AdamOptimizer(learning_rate)
+    top_only_step_op = optimizer.minimize(loss, var_list=top_variables)
+    all_step_op = optimizer.minimize(loss, global_step=tf.train.get_or_create_global_step)
 
-        with tf.variable_scope("top"):
-            prediction = tf.contrib.layers.fully_connected(
-                final_hidden, 1, activation_fn=None,
-                weights_initializer=initializer,
-                biases_initializer=tf.zeros_initializer()
-            )
+    nonpad_len(batch)
 
-        loss = tf.losses.mean_squared_error(y_placeholder, prediction)
-        learning_rate = .001
-        top_variables = tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope="top")
-        optimizer = tf.train.AdamOptimizer(learning_rate)
-        top_only_step_op = optimizer.minimize(loss, var_list=top_variables)
-        all_step_op = optimizer.minimize(loss)
+    y = [[42]] * batch_size
+    num_iters = 10
+    with tf.Session() as sess:
+        sess.run(tf.global_variables_initializer())
+        for i in range(num_iters):
+            batch = sess.run(bucket_op)
+            length = nonpad_len(batch)
+            loss_, __, = sess.run([loss, all_step_op],
+                                  feed_dict={
+                                      x_placeholder: batch,
+                                      y_placeholder: y,
+                                      batch_size_placeholder: batch_size,
+                                      seq_length_placeholder: length,
+                                      initial_state_placeholder: model._zero_state
+                                  }
+                                  )
 
-        nonpad_len(batch)
+            print("Iteration {0}: {1}".format(i, loss_))
 
-        y = [[42]] * batch_size
-        num_iters = 10
-        with tf.Session() as sess:
-            sess.run(tf.global_variables_initializer())
-            for i in range(num_iters):
-                batch = sess.run(bucket_op)
-                length = nonpad_len(batch)
-                loss_, __, = sess.run([loss, all_step_op],
-                                      feed_dict={
-                                          x_placeholder: batch,
-                                          y_placeholder: y,
-                                          batch_size_placeholder: batch_size,
-                                          seq_length_placeholder: length,
-                                          initial_state_placeholder: model._zero_state
-                                      }
-                                      )
-
-                print("Iteration {0}: {1}".format(i, loss_))
+    if mode == Modes.EVAL:
         return tf.estimator.EstimatorSpec(
             mode=mode,
             loss=loss
         )
 
-    # Evaluate
-    if mode == Modes.EVAL:
+    elif mode == Modes.TRAIN:
         return tf.estimator.EstimatorSpec(
             mode=mode,
+            loss=loss,
+            train_op=all_step_op
         )
 
+
+# This currently only returns seqs, change to actual labels if using labeled data
 def input_fn():
     store = np.array([])
     with open("seqs.txt", "r") as source:
@@ -117,13 +120,16 @@ def input_fn():
 
     # dataset = tf.data.Dataset.from_tensor_slices(store)
 
-    bucket_op = data_utils.bucket_batch_pad("formatted.txt", interval=1000)
+    bucket_op = data_utils.bucket_batch_pad("formatted.txt", 12, interval=1000)
 
     with tf.Session() as sess:
         sess.run(tf.global_variables_initializer())
         batch = sess.run(bucket_op)
 
-    return batch
+    features = batch
+    labels = None
+
+    return features, labels
 
 
 
@@ -134,6 +140,10 @@ estimator = tf.estimator.Estimator(model_fn=model_fn,
                                        'batch_size': 12
                                    })
 
-estimator.train(input_fn)
+hook = tf.contrib.estimator.stop_if_no_increase_hook(
+    estimator, 'f1', 500, min_steps=8000, run_every_secs=120)
+train_spec = tf.estimator.TrainSpec(input_fn=input_fn, hooks=[hook])
+#eval_spec = tf.estimator.EvalSpec(input_fn=eval_inpf, throttle_secs=120)
 
+estimator.train(input_fn(), hook)
 
