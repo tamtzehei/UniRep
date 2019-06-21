@@ -12,13 +12,32 @@ import unirep
 import data_utils
 
 import argparse
-
+import pdb
+import unirep
 # Arguments
 parser = argparse.ArgumentParser()
 parser.add_argument('--batch_size', default=100, type=int, help='batch size')
 parser.add_argument('--train_steps', default=1000, type=int,
                     help='number of training steps')
 
+# Helpers
+def tf_get_shape(tensor):
+    static_shape = tensor.shape.as_list()
+    dynamic_shape = tf.unstack(tf.shape(tensor))
+    dims = [s[1] if s[0] is None else s[0]
+            for s in zip(static_shape, dynamic_shape)]
+    return dims
+
+
+def sample_with_temp(logits, t):
+    """
+    Takes temperature between 0 and 1 -> zero most conservative, 1 most liberal. Samples.
+    """
+    t_adjusted = logits / t  # broadcast temperature normalization
+    softed = tf.nn.softmax(t_adjusted)
+
+    # Make a categorical distribution from the softmax and sample
+    return tf.distributions.Categorical(probs=softed).sample()
 
 def nonpad_len(batch):
     nonzero = batch > 0
@@ -26,15 +45,16 @@ def nonpad_len(batch):
     return lengths
 
 def model_fn(features, labels, mode, params):
-
     # Get pretrained weights
-    #os.system('aws s3 sync --no-sign-request --quiet s3://unirep-public/1900_weights/ 1900_weights/')
+    # os.system('aws s3 sync --no-sign-request --quiet s3://unirep-public/1900_weights/ 1900_weights/')
 
     model_path = "./1900_weights"
 
     batch_size = params['batch_size']
 
     # Define model
+
+
     model = unirep.babbler1900(batch_size=batch_size, model_path=model_path)
 
     bucket_op = model.bucket_batch_pad("formatted.txt", interval=1000)
@@ -45,9 +65,8 @@ def model_fn(features, labels, mode, params):
 
     # Predict
     if mode == Modes.PREDICT:
-        for seq in features:
-            model.get_rep(seq)
-        return tf.estimator.EstimatorSpec
+        predictions = None
+        return tf.estimator.EstimatorSpec(mode, predictions=predictions)
 
     # Train and Evaluate
     final_hidden, x_placeholder, batch_size_placeholder, seq_length_placeholder, initial_state_placeholder = (
@@ -144,6 +163,6 @@ hook = tf.contrib.estimator.stop_if_no_increase_hook(
     estimator, 'f1', 500, min_steps=8000, run_every_secs=120)
 train_spec = tf.estimator.TrainSpec(input_fn=input_fn, hooks=[hook])
 #eval_spec = tf.estimator.EvalSpec(input_fn=eval_inpf, throttle_secs=120)
-
-estimator.train(input_fn(), hook)
+pdb.set_trace()
+estimator.train(input_fn(), steps=1000)
 
