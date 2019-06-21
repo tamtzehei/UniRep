@@ -200,10 +200,7 @@ all_step_op = optimizer.minimize(loss)
 # In[19]:
 
 
-def nonpad_len(batch):
-    nonzero = batch > 0
-    lengths = np.sum(nonzero, axis=1)
-    return lengths
+
 
 nonpad_len(batch)
 
