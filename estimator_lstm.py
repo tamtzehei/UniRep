@@ -1,4 +1,5 @@
 import tensorflow as tf
+import logging
 from tensorflow.python.estimator.model_fn import ModeKeys as Modes
 import numpy as np
 import pandas as pd
@@ -40,7 +41,6 @@ def input_fn(batch_size, rnn_size, model_path):
     rnn = unirep.mLSTMCell1900(rnn_size,
                                model_path=model_path,
                                wn=True)
-    store = np.array([])
     with open("seqs.txt", "r") as source:
         with open("formatted.txt", "w") as destination:
             for i, seq in enumerate(source):
@@ -49,7 +49,6 @@ def input_fn(batch_size, rnn_size, model_path):
                     formatted = ",".join(map(str, data_utils.format_seq(seq)))
                     destination.write(formatted)
                     destination.write('\n')
-                    store = np.append(store, formatted)
 
     # dataset = tf.data.Dataset.from_tensor_slices(store)
 
@@ -64,7 +63,7 @@ def input_fn(batch_size, rnn_size, model_path):
     y = [[42]] * batch_size
     # batch_size
     seq_length = nonpad_len(batch)
-    initial_state = rnn._zero_state
+    initial_state = rnn.zero_state
 
     features = {'x': x,
                 'y': y,
@@ -134,13 +133,13 @@ def model_fn(features, labels, mode, params):
     optimizer = tf.train.AdamOptimizer(learning_rate)
 
     # Equivalent to all_step_op
-    train_op = optimizer.minimize(loss, global_step=tf.train.get_or_create_global_step())
+    train_op = optimizer.minimize(loss)#, global_step=tf.train.get_or_create_global_step())
 
 
     if mode == tf.estimator.ModeKeys.PREDICT:
         # Extract the predictions
         predictions = logits
-        return tf.estimator.EstimatorSpec(mode, predictions=predictions)
+        return tf.estimator.EstimatorSpec(mode=mode, predictions=predictions)
     else:
         # Compute loss, metrics, tensorboard summaries
         #loss = compute_loss_from(graph_outputs, labels)
@@ -148,29 +147,38 @@ def model_fn(features, labels, mode, params):
 
         if mode == tf.estimator.ModeKeys.EVAL:
             return tf.estimator.EstimatorSpec(
-                mode, loss=loss)
+                mode=mode, loss=loss)
 
         elif mode == tf.estimator.ModeKeys.TRAIN:
             # Get train operator
 
             return tf.estimator.EstimatorSpec(
-                mode, loss=loss, train_op=train_op)
+                mode=mode, loss=loss, train_op=train_op)
 
         else:
             raise NotImplementedError('Unknown mode {}'.format(mode))
 
 
 # test code
-
+tf.logging.set_verbosity(logging.FATAL)
+handlers = [
+    logging.FileHandler('results/main.log'),
+    logging.StreamHandler(sys.stdout)
+]
+logging.getLogger('tensorflow').handlers = handlers
 estimator = tf.estimator.Estimator(model_fn=model_fn,
                                    params={
-                                       'batch_size': 12
+                                       'batch_size': 12,
+                                       'model_path': "./1900_weights",
+                                       'lr': 0.001
                                    })
+
+estimator.train(input_fn(12, 1900, "./1900_weights"))
 
 hook = tf.contrib.estimator.stop_if_no_increase_hook(
     estimator, 'f1', 500, min_steps=8000, run_every_secs=120)
 train_spec = tf.estimator.TrainSpec(input_fn=input_fn, hooks=[hook])
 #eval_spec = tf.estimator.EvalSpec(input_fn=eval_inpf, throttle_secs=120)
-pdb.set_trace()
-estimator.train(input_fn(), steps=1000)
+#pdb.set_trace()
+
 
