@@ -37,42 +37,54 @@ def nonpad_len(batch):
     lengths = np.sum(nonzero, axis=1)
     return lengths
 
-def input_fn(batch_size, rnn_size, model_path):
-    rnn = unirep.mLSTMCell1900(rnn_size,
-                               model_path=model_path,
-                               wn=True)
-    with open("seqs.txt", "r") as source:
-        with open("formatted.txt", "w") as destination:
-            for i, seq in enumerate(source):
-                seq = seq.strip()
-                if data_utils.is_valid_seq(seq) and len(seq) < 275:
-                    formatted = ",".join(map(str, data_utils.format_seq(seq)))
-                    destination.write(formatted)
-                    destination.write('\n')
+def input_gen(batch_size, rnn_size, model_path):
 
-    # dataset = tf.data.Dataset.from_tensor_slices(store)
+    while True:
+        rnn = unirep.mLSTMCell1900(rnn_size,
+                                   model_path=model_path,
+                                   wn=True)
+        with open("seqs.txt", "r") as source:
+            with open("formatted.txt", "w") as destination:
+                for i, seq in enumerate(source):
+                    seq = seq.strip()
+                    if data_utils.is_valid_seq(seq) and len(seq) < 275:
+                        formatted = ",".join(map(str, data_utils.format_seq(seq)))
+                        destination.write(formatted)
+                        destination.write('\n')
 
-    bucket_op = data_utils.bucket_batch_pad("formatted.txt", 12, interval=1000)
+        # dataset = tf.data.Dataset.from_tensor_slices(store)
 
-    with tf.Session() as sess:
-        sess.run(tf.global_variables_initializer())
-        batch = sess.run(bucket_op)
+        bucket_op = data_utils.bucket_batch_pad("formatted.txt", 12, interval=1000)
 
-    # Replication of feed_dict from unirep_tutorial.py
-    x = batch
-    y = [[42]] * batch_size
-    # batch_size
-    seq_length = nonpad_len(batch)
-    initial_state = rnn.zero_state
+        with tf.Session() as sess:
+            sess.run(tf.global_variables_initializer())
+            batch = sess.run(bucket_op)
 
-    features = {'x': x,
-                'y': y,
-                'batch_size': batch_size,
-                'seq_length': seq_length,
-                'initial_state': initial_state}
-    labels = None
+        print batch
+        print type(batch)
 
-    return features, labels
+        # Replication of feed_dict from unirep_tutorial.py
+        x = batch
+        y = [[42]] * batch_size
+        # batch_size
+        seq_length = nonpad_len(batch)
+        initial_state = rnn.zero_state(12, tf.float32)
+
+        features = {'x': tf.convert_to_tensor(x),
+                    'y': tf.convert_to_tensor(y),
+                    'batch_size': tf.convert_to_tensor(batch_size),
+                    'seq_length': tf.convert_to_tensor(seq_length),
+                    'initial_state': tf.convert_to_tensor(initial_state)}
+        labels = None
+
+        yield features#, labels
+
+def input_fn():
+    shapes = ({None})
+    types = (tf.string)
+
+    dataset = tf.data.Dataset.from_generator(input_gen(12, 1900, "./1900_weights"), output_shapes=shapes, output_types=types)
+
 
 def model_fn(features, labels, mode, params):
     # Define the inference graph
@@ -158,9 +170,15 @@ def model_fn(features, labels, mode, params):
         else:
             raise NotImplementedError('Unknown mode {}'.format(mode))
 
+# Test data input
+dataset, _ = input_fn()
+iterator = dataset.make_one_shot_iterator()
+node = iterator.get_next()
+with tf.Session() as sess:
+    print(sess.run(node))
 
-# test code
-tf.logging.set_verbosity(logging.FATAL)
+# Test estimator
+tf.logging.set_verbosity(logging.INFO)
 handlers = [
     logging.FileHandler('results/main.log'),
     logging.StreamHandler(sys.stdout)
