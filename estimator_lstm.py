@@ -8,6 +8,7 @@ from data_utils import aa_seq_to_int, int_to_aa, bucketbatchpad
 import os
 import unirep
 import data_utils
+import functools
 
 import argparse
 import pdb
@@ -37,12 +38,13 @@ def nonpad_len(batch):
     lengths = np.sum(nonzero, axis=1)
     return lengths
 
-def input_gen(batch_size, rnn_size, model_path):
+def train_input_fn():
+    return
+
+def input_gen(batch_size):
 
     while True:
-        rnn = unirep.mLSTMCell1900(rnn_size,
-                                   model_path=model_path,
-                                   wn=True)
+
         with open("seqs.txt", "r") as source:
             with open("formatted.txt", "w") as destination:
                 for i, seq in enumerate(source):
@@ -61,64 +63,87 @@ def input_gen(batch_size, rnn_size, model_path):
             batch = sess.run(bucket_op)
 
         print batch
+        print batch.shape
         print type(batch)
 
         # Replication of feed_dict from unirep_tutorial.py
+        # batch is np.ndarray
         x = batch
         y = [[42]] * batch_size
         # batch_size
         seq_length = nonpad_len(batch)
-        initial_state = rnn.zero_state(12, tf.float32)
+        #initial_state, _ = rnn.zero_state(12, tf.float32)
 
-        features = {'x': tf.convert_to_tensor(x),
-                    'y': tf.convert_to_tensor(y),
-                    'batch_size': tf.convert_to_tensor(batch_size),
-                    'seq_length': tf.convert_to_tensor(seq_length),
-                    'initial_state': tf.convert_to_tensor(initial_state)}
+        #print type(initial_state)
+        #print initial_state.shape
+
+        features = batch
+
+
         labels = None
-
+        """
+        return tf.estimator.inputs.numpy_input_fn(
+            'x': tf.convert_to_tensor(x),
+            'y': tf.convert_to_tensor(y),
+            'batch_size': tf.convert_to_tensor(batch_size),
+             'seq_length': tf.convert_to_tensor(seq_length),
+             'initial_state': tf.convert_to_tensor(initial_state)
+        )
+        """
         yield features#, labels
 
 def input_fn():
-    shapes = ({None})
-    types = (tf.string)
+    shapes = ([12, 265])
+    types = (tf.int16)
 
-    dataset = tf.data.Dataset.from_generator(input_gen(12, 1900, "./1900_weights"), output_shapes=shapes, output_types=types)
+    dataset = tf.data.Dataset.from_generator(functools.partial(input_gen, 12), output_shapes=shapes, output_types=types)
+
+    labels = None
+
+    return dataset, labels
 
 
 def model_fn(features, labels, mode, params):
     # Define the inference graph
+
+    length = tf.py_func(nonpad_len, features)
 
     rnn_size = 1900
     vocab_size = 26
     model_path = params['model_path']
     batch_size = params['batch_size']
     learning_rate = params['lr']
+
+    y = tf.fill([1], 42 * batch_size)
     rnn = unirep.mLSTMCell1900(rnn_size,
                     model_path=model_path,
                         wn=True)
     zero_state = rnn.zero_state(batch_size, tf.float32)
     single_zero = rnn.zero_state(1, tf.float32)
-    mask = tf.sign(features[''])  # 1 for nonpad, zero for pad
+    mask = tf.sign(y)  # 1 for nonpad, zero for pad
     inverse_mask = 1 - mask  # 0 for nonpad, 1 for pad
 
     total_padded = tf.reduce_sum(inverse_mask)
 
-    pad_adjusted_targets = (features[''] - 1) + inverse_mask
+    pad_adjusted_targets = (y - 1) + inverse_mask
 
     embed_matrix = tf.get_variable(
         "embed_matrix", dtype=tf.float32, initializer=np.load(os.path.join(model_path, "embed_matrix:0.npy"))
     )
-    embed_cell = tf.nn.embedding_lookup(embed_matrix, features['x'])
+    embed_cell = tf.nn.embedding_lookup(embed_matrix, features)
+
+    # In progress
+    initial_state = (tf.zeros([batch_size, rnn_size], dtype=tf.float32), tf.zeros([batch_size, rnn_size], dtype=tf.float32))
+
     output, final_state = tf.keras.layers.RNN(
         rnn,
         embed_cell,
-        initial_state=features['initial_state'],
+        initial_state=initial_state,
         swap_memory=True,
         parallel_iterations=1
     )
 
-    indices = features['seq_length'] - 1
+    indices = length - 1
     top_final_hidden = tf.gather_nd(output,
                                           tf.stack([tf.range(tf_get_shape(output)[0], dtype=tf.int32), indices],
                                                    axis=1))
@@ -130,7 +155,7 @@ def model_fn(features, labels, mode, params):
         biases_initializer=tf.constant_initializer(
             np.load(os.path.join(model_path, "fully_connected_biases:0.npy"))))
     logits = tf.reshape(
-        logits_flat, [batch_size, tf_get_shape(features['x'])[1], vocab_size - 1])
+        logits_flat, [batch_size, tf_get_shape(features)[1], vocab_size - 1])
 
     # Loss
     batch_losses = tf.contrib.seq2seq.sequence_loss(
@@ -170,33 +195,46 @@ def model_fn(features, labels, mode, params):
         else:
             raise NotImplementedError('Unknown mode {}'.format(mode))
 
-# Test data input
-dataset, _ = input_fn()
-iterator = dataset.make_one_shot_iterator()
-node = iterator.get_next()
-with tf.Session() as sess:
-    print(sess.run(node))
+if __name__ == '__main__':
 
-# Test estimator
-tf.logging.set_verbosity(logging.INFO)
-handlers = [
-    logging.FileHandler('results/main.log'),
-    logging.StreamHandler(sys.stdout)
-]
-logging.getLogger('tensorflow').handlers = handlers
-estimator = tf.estimator.Estimator(model_fn=model_fn,
-                                   params={
-                                       'batch_size': 12,
-                                       'model_path': "./1900_weights",
-                                       'lr': 0.001
-                                   })
+    # Test data input
+    dataset, _ = input_fn()
+    iterator = dataset.make_one_shot_iterator()
+    node = iterator.get_next()
+    with tf.Session() as sess:
+        print(sess.run(node))
 
-estimator.train(input_fn(12, 1900, "./1900_weights"))
+    # Build feature columns
+    """
+    feature_columns = []
+    feature_columns.append(tf.feature_column.numeric_column(key="x", shape = [12, 265]))
+    feature_columns.append(tf.feature_column.numeric_column(key="y"))
+    feature_columns.append(tf.feature_column.numeric_column(key="batch_size"))
+    feature_columns.append(tf.feature_column.numeric_column(key="seq_length"))
+    """
 
-hook = tf.contrib.estimator.stop_if_no_increase_hook(
-    estimator, 'f1', 500, min_steps=8000, run_every_secs=120)
-train_spec = tf.estimator.TrainSpec(input_fn=input_fn, hooks=[hook])
-#eval_spec = tf.estimator.EvalSpec(input_fn=eval_inpf, throttle_secs=120)
-#pdb.set_trace()
+
+
+    # Test estimator
+    tf.logging.set_verbosity(logging.INFO)
+    handlers = [
+        logging.FileHandler('results/main.log'),
+        logging.StreamHandler(sys.stdout)
+    ]
+    logging.getLogger('tensorflow').handlers = handlers
+    estimator = tf.estimator.Estimator(model_fn=model_fn,
+                                       params={
+                                           'batch_size': 12,
+                                           'model_path': "./1900_weights",
+                                           'lr': 0.001
+                                       })
+
+    estimator.train(input_fn())
+
+    hook = tf.contrib.estimator.stop_if_no_increase_hook(
+        estimator, 'f1', 500, min_steps=8000, run_every_secs=120)
+    train_spec = tf.estimator.TrainSpec(input_fn=input_fn, hooks=[hook])
+    #eval_spec = tf.estimator.EvalSpec(input_fn=eval_inpf, throttle_secs=120)
+    #pdb.set_trace()
 
 
