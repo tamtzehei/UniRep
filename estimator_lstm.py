@@ -1,4 +1,6 @@
 import tensorflow as tf
+tf.enable_eager_execution()
+
 import logging
 from tensorflow.python.estimator.model_fn import ModeKeys as Modes
 import numpy as np
@@ -13,6 +15,8 @@ import functools
 import argparse
 import pdb
 import unirep
+
+
 
 # Helpers
 def tf_get_shape(tensor):
@@ -37,9 +41,6 @@ def nonpad_len(batch):
     nonzero = batch > 0
     lengths = np.sum(nonzero, axis=1)
     return lengths
-
-def train_input_fn():
-    return
 
 def input_gen(batch_size):
 
@@ -96,17 +97,20 @@ def input_fn():
     shapes = ([12, 265])
     types = (tf.int16)
 
-    dataset = tf.data.Dataset.from_generator(functools.partial(input_gen, 12), output_shapes=shapes, output_types=types)
+    dataset = tf.data.Dataset.from_generator(functools.partial(input_gen, 12), output_types=types)
 
     labels = None
 
-    return dataset, labels
+    return dataset
 
 
 def model_fn(features, labels, mode, params):
     # Define the inference graph
 
-    length = tf.py_func(nonpad_len, features)
+    #print features
+
+    #length = tf.py_func(nonpad_len, [features], stateful=False)
+    length = nonpad_len(features)
 
     rnn_size = 1900
     vocab_size = 26
@@ -198,7 +202,7 @@ def model_fn(features, labels, mode, params):
 if __name__ == '__main__':
 
     # Test data input
-    dataset, _ = input_fn()
+    dataset = input_fn()
     iterator = dataset.make_one_shot_iterator()
     node = iterator.get_next()
     with tf.Session() as sess:
@@ -229,12 +233,13 @@ if __name__ == '__main__':
                                            'lr': 0.001
                                        })
 
-    estimator.train(input_fn())
+    #estimator.train(input_fn())
 
     hook = tf.contrib.estimator.stop_if_no_increase_hook(
         estimator, 'f1', 500, min_steps=8000, run_every_secs=120)
     train_spec = tf.estimator.TrainSpec(input_fn=input_fn, hooks=[hook])
-    #eval_spec = tf.estimator.EvalSpec(input_fn=eval_inpf, throttle_secs=120)
+    eval_spec = tf.estimator.EvalSpec(input_fn=input_fn, throttle_secs=120)
+    tf.estimator.train_and_evaluate(estimator, train_spec, eval_spec)
     #pdb.set_trace()
 
 
