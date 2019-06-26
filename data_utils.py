@@ -265,5 +265,5 @@ def bucket_batch_pad(filepath, batch_size=12, shuffle_buffer=10000, upper=2000, 
                 path_to_data=filepath,
                 shuffle_buffer=shuffle_buffer,
                 repeat=None
-    ).make_one_shot_iterator().get_next()
+    )#.make_one_shot_iterator().get_next()
     return bucket_batch

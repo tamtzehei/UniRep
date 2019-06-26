@@ -1,5 +1,5 @@
 import tensorflow as tf
-tf.enable_eager_execution()
+# tf.enable_eager_execution()
 
 import logging
 from tensorflow.python.estimator.model_fn import ModeKeys as Modes
@@ -39,7 +39,7 @@ def sample_with_temp(logits, t):
 
 def nonpad_len(batch):
     nonzero = batch > 0
-    lengths = np.sum(nonzero, axis=1)
+    lengths = np.sum(nonzero, axis=0)
     return lengths
 
 def input_gen(batch_size):
@@ -91,13 +91,16 @@ def input_gen(batch_size):
              'initial_state': tf.convert_to_tensor(initial_state)
         )
         """
-        yield features#, labels
+        return features#, labels
 
 def input_fn():
     shapes = ([12, 265])
     types = (tf.int16)
 
     dataset = tf.data.Dataset.from_generator(functools.partial(input_gen, 12), output_types=types)
+
+    for tens in dataset:
+        print tens
 
     labels = None
 
@@ -110,7 +113,7 @@ def model_fn(features, labels, mode, params):
     #print features
 
     #length = tf.py_func(nonpad_len, [features], stateful=False)
-    length = nonpad_len(features)
+    length = tf.py_func(nonpad_len, [features], [tf.int32])[0]
 
     rnn_size = 1900
     vocab_size = 26
@@ -119,6 +122,8 @@ def model_fn(features, labels, mode, params):
     learning_rate = params['lr']
 
     y = tf.fill([1], 42 * batch_size)
+
+    print type(y)
     rnn = unirep.mLSTMCell1900(rnn_size,
                     model_path=model_path,
                         wn=True)
@@ -139,7 +144,7 @@ def model_fn(features, labels, mode, params):
     # In progress
     initial_state = (tf.zeros([batch_size, rnn_size], dtype=tf.float32), tf.zeros([batch_size, rnn_size], dtype=tf.float32))
 
-    output, final_state = tf.keras.layers.RNN(
+    output, final_state = tf.nn.dynamic_rnn(
         rnn,
         embed_cell,
         initial_state=initial_state,
@@ -202,11 +207,13 @@ def model_fn(features, labels, mode, params):
 if __name__ == '__main__':
 
     # Test data input
-    dataset = input_fn()
+    """
+    dataset = input_gen(12)
     iterator = dataset.make_one_shot_iterator()
     node = iterator.get_next()
     with tf.Session() as sess:
         print(sess.run(node))
+    """
 
     # Build feature columns
     """
@@ -235,10 +242,11 @@ if __name__ == '__main__':
 
     #estimator.train(input_fn())
 
-    hook = tf.contrib.estimator.stop_if_no_increase_hook(
-        estimator, 'f1', 500, min_steps=8000, run_every_secs=120)
-    train_spec = tf.estimator.TrainSpec(input_fn=input_fn, hooks=[hook])
-    eval_spec = tf.estimator.EvalSpec(input_fn=input_fn, throttle_secs=120)
+    #hook = tf.contrib.estimator.stop_if_no_increase_hook(estimator, 'f1', 500, min_steps=8000, run_every_secs=120)
+    #input_fun = functools.partial(input_gen, 12)
+    input_fun = functools.partial(data_utils.bucket_batch_pad,"formatted.txt", 12, interval=1000)
+    train_spec = tf.estimator.TrainSpec(input_fn=input_fun)
+    eval_spec = tf.estimator.EvalSpec(input_fn=input_fun, throttle_secs=120)
     tf.estimator.train_and_evaluate(estimator, train_spec, eval_spec)
     #pdb.set_trace()
 
