@@ -2,8 +2,6 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="4f8007dc-cc61-4702-85c3-57576ca034aa" name="Default Changelist" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/data_utils.py" beforeDir="false" afterPath="$PROJECT_DIR$/data_utils.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/estimator_lstm.py" beforeDir="false" afterPath="$PROJECT_DIR$/estimator_lstm.py" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
@@ -74,8 +72,8 @@
       <file pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/estimator_lstm.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="274">
-              <caret line="122" lean-forward="true" selection-start-line="122" selection-end-line="122" />
+            <state relative-caret-position="1212">
+              <caret line="209" column="30" lean-forward="true" selection-start-line="209" selection-start-column="30" selection-end-line="209" selection-end-column="30" />
               <folding>
                 <element signature="e#0#23#0" expanded="true" />
               </folding>
@@ -86,17 +84,8 @@
       <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/data_utils.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="1047">
-              <caret line="267" column="6" selection-start-line="267" selection-start-column="6" selection-end-line="267" selection-end-column="6" />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/train.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="2700">
-              <caret line="181" selection-start-line="181" selection-end-line="181" />
+            <state relative-caret-position="-558">
+              <caret line="160" column="17" lean-forward="true" selection-start-line="160" selection-start-column="17" selection-end-line="160" selection-end-column="17" />
             </state>
           </provider>
         </entry>
@@ -351,13 +340,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/data_utils.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="1047">
-          <caret line="267" column="6" selection-start-line="267" selection-start-column="6" selection-end-line="267" selection-end-column="6" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/unirep.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="1452">
@@ -368,10 +350,17 @@
         </state>
       </provider>
     </entry>
+    <entry file="file://$PROJECT_DIR$/data_utils.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="-558">
+          <caret line="160" column="17" lean-forward="true" selection-start-line="160" selection-start-column="17" selection-end-line="160" selection-end-column="17" />
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/estimator_lstm.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="274">
-          <caret line="122" lean-forward="true" selection-start-line="122" selection-end-line="122" />
+        <state relative-caret-position="1212">
+          <caret line="209" column="30" lean-forward="true" selection-start-line="209" selection-start-column="30" selection-end-line="209" selection-end-column="30" />
           <folding>
             <element signature="e#0#23#0" expanded="true" />
           </folding>
