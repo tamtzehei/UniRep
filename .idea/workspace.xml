@@ -2,11 +2,11 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="4f8007dc-cc61-4702-85c3-57576ca034aa" name="Default Changelist" comment="">
+      <change afterPath="$PROJECT_DIR$/s3upload.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/batch.txt" beforeDir="false" afterPath="$PROJECT_DIR$/batch.txt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/estimator_lstm.py" beforeDir="false" afterPath="$PROJECT_DIR$/estimator_lstm.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/unirep_tutorial.ipynb" beforeDir="false" afterPath="$PROJECT_DIR$/unirep_tutorial.ipynb" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/unirep_tutorial.py" beforeDir="false" afterPath="$PROJECT_DIR$/unirep_tutorial.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/estimator_lstm.py" beforeDir="false" afterPath="$PROJECT_DIR$/estimator_test.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/sagetrain.py" beforeDir="false" afterPath="$PROJECT_DIR$/sagetrain.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/unirep_estimator.py" beforeDir="false" afterPath="$PROJECT_DIR$/unirep_estimator.py" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
@@ -16,18 +16,6 @@
   </component>
   <component name="FileEditorManager">
     <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
-      <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/sagetrain.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="60">
-              <caret line="9" selection-start-line="9" selection-end-line="9" />
-              <folding>
-                <element signature="e#0#9#0" expanded="true" />
-              </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
       <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/custom_models.py">
           <provider selected="true" editor-type-id="text-editor">
@@ -61,23 +49,11 @@
           </provider>
         </entry>
       </file>
-      <file pinned="false" current-in-tab="false">
+      <file pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/unirep_estimator.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="2250">
-              <caret line="154" selection-start-line="154" selection-end-line="166" selection-end-column="39" />
-              <folding>
-                <element signature="e#37#60#0" expanded="true" />
-              </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file pinned="false" current-in-tab="true">
-        <entry file="file://$PROJECT_DIR$/estimator_lstm.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="822">
-              <caret line="234" column="49" selection-start-line="234" selection-start-column="49" selection-end-line="234" selection-end-column="49" />
+            <state relative-caret-position="657">
+              <caret line="327" column="20" selection-start-line="327" selection-start-column="20" selection-end-line="327" selection-end-column="20" />
               <folding>
                 <element signature="e#0#23#0" expanded="true" />
               </folding>
@@ -86,10 +62,43 @@
         </entry>
       </file>
       <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/sagetrain.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="360">
+              <caret line="24" selection-start-line="24" selection-end-line="24" />
+              <folding>
+                <element signature="e#0#9#0" expanded="true" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/estimator_test.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="105">
+              <caret line="7" column="10" lean-forward="true" selection-start-line="7" selection-start-column="10" selection-end-line="7" selection-end-column="10" />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/data_utils.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="2370">
-              <caret line="160" column="17" selection-start-line="160" selection-start-column="17" selection-end-line="160" selection-end-column="17" />
+            <state relative-caret-position="180">
+              <caret line="14" selection-start-line="14" selection-end-line="269" />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/s3upload.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="405">
+              <caret line="27" column="14" selection-start-line="27" selection-start-column="14" selection-end-line="27" selection-end-column="14" />
+              <folding>
+                <element signature="e#0#13#0" expanded="true" />
+              </folding>
             </state>
           </provider>
         </entry>
@@ -113,6 +122,8 @@
       <find>colocate</find>
       <find>features</find>
       <find>initial_state</find>
+      <find>data</find>
+      <find>data_utils</find>
     </findStrings>
     <replaceStrings>
       <replace />
@@ -127,20 +138,21 @@
         <option value="$PROJECT_DIR$/docker/Dockerfile.gpu" />
         <option value="$PROJECT_DIR$/docker/run_gpu_docker.sh" />
         <option value="$PROJECT_DIR$/docker/run_cpu_docker.sh" />
-        <option value="$PROJECT_DIR$/sagetrain.py" />
-        <option value="$PROJECT_DIR$/unirep_estimator.py" />
         <option value="$PROJECT_DIR$/unirep.py" />
         <option value="$PROJECT_DIR$/custom_models.py" />
         <option value="$PROJECT_DIR$/data_utils.py" />
         <option value="$PROJECT_DIR$/unirep_tutorial.py" />
         <option value="$PROJECT_DIR$/estimator_lstm.py" />
+        <option value="$PROJECT_DIR$/sagetrain.py" />
+        <option value="$PROJECT_DIR$/s3upload.py" />
+        <option value="$PROJECT_DIR$/unirep_estimator.py" />
       </list>
     </option>
   </component>
   <component name="ProjectFrameBounds">
-    <option name="x" value="673" />
+    <option name="x" value="846" />
     <option name="y" value="27" />
-    <option name="width" value="1466" />
+    <option name="width" value="1467" />
     <option name="height" value="1348" />
   </component>
   <component name="ProjectView">
@@ -148,7 +160,6 @@
       <foldersAlwaysOnTop value="true" />
     </navigator>
     <panes>
-      <pane id="Scope" />
       <pane id="ProjectPane">
         <subPane>
           <expand>
@@ -170,6 +181,7 @@
           <select />
         </subPane>
       </pane>
+      <pane id="Scope" />
     </panes>
   </component>
   <component name="PropertiesComponent">
@@ -208,10 +220,10 @@
     <servers />
   </component>
   <component name="ToolWindowManager">
-    <frame x="673" y="27" width="1466" height="1348" extended-state="0" />
+    <frame x="846" y="27" width="1467" height="1348" extended-state="0" />
     <editor active="true" />
     <layout>
-      <window_info active="true" content_ui="combo" id="Project" order="0" visible="true" weight="0.14968815" />
+      <window_info content_ui="combo" id="Project" order="0" visible="true" weight="0.14958449" />
       <window_info id="Structure" order="1" side_tool="true" weight="0.25" />
       <window_info id="Favorites" order="2" side_tool="true" />
       <window_info anchor="bottom" id="Message" order="0" />
@@ -254,7 +266,6 @@
       <breakpoints>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/unirep_estimator.py</url>
-          <line>2</line>
           <option name="timeStamp" value="1" />
         </line-breakpoint>
       </breakpoints>
@@ -307,16 +318,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/sagetrain.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="60">
-          <caret line="9" selection-start-line="9" selection-end-line="9" />
-          <folding>
-            <element signature="e#0#9#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/custom_models.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="570">
@@ -344,27 +345,44 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/unirep_estimator.py">
+    <entry file="file://$PROJECT_DIR$/sagetrain.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="2250">
-          <caret line="154" selection-start-line="154" selection-end-line="166" selection-end-column="39" />
+        <state relative-caret-position="360">
+          <caret line="24" selection-start-line="24" selection-end-line="24" />
           <folding>
-            <element signature="e#37#60#0" expanded="true" />
+            <element signature="e#0#9#0" expanded="true" />
           </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/s3upload.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="405">
+          <caret line="27" column="14" selection-start-line="27" selection-start-column="14" selection-end-line="27" selection-end-column="14" />
+          <folding>
+            <element signature="e#0#13#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/estimator_test.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="105">
+          <caret line="7" column="10" lean-forward="true" selection-start-line="7" selection-start-column="10" selection-end-line="7" selection-end-column="10" />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/data_utils.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="2370">
-          <caret line="160" column="17" selection-start-line="160" selection-start-column="17" selection-end-line="160" selection-end-column="17" />
+        <state relative-caret-position="180">
+          <caret line="14" selection-start-line="14" selection-end-line="269" />
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/estimator_lstm.py">
+    <entry file="file://$PROJECT_DIR$/unirep_estimator.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="822">
-          <caret line="234" column="49" selection-start-line="234" selection-start-column="49" selection-end-line="234" selection-end-column="49" />
+        <state relative-caret-position="657">
+          <caret line="327" column="20" selection-start-line="327" selection-start-column="20" selection-end-line="327" selection-end-column="20" />
           <folding>
             <element signature="e#0#23#0" expanded="true" />
           </folding>
