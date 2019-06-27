@@ -7,7 +7,7 @@
 
 # Use the 64-unit or the 1900-unit model?
 
-# In[1]:
+# In[5]:
 
 
 USE_FULL_1900_DIM_MODEL = False # if True use 1900 dimensional model, else use 64 dimensional one.
@@ -15,7 +15,7 @@ USE_FULL_1900_DIM_MODEL = False # if True use 1900 dimensional model, else use 6
 
 # ## Setup
 
-# In[2]:
+# In[6]:
 
 
 import tensorflow as tf
@@ -27,7 +27,7 @@ np.random.seed(42)
 
 if USE_FULL_1900_DIM_MODEL:
     # Sync relevant weight files
-    get_ipython().system('aws s3 sync --no-sign-request --quiet s3://unirep-public/1900_weights/ 1900_weights/')
+    #get_ipython().system('aws s3 sync --no-sign-request --quiet s3://unirep-public/1900_weights/ 1900_weights/')
     
     # Import the mLSTM babbler model
     from unirep import babbler1900 as babbler
@@ -37,7 +37,7 @@ if USE_FULL_1900_DIM_MODEL:
     
 else:
     # Sync relevant weight files
-    get_ipython().system('aws s3 sync --no-sign-request --quiet s3://unirep-public/64_weights/ 64_weights/')
+    #get_ipython().system('aws s3 sync --no-sign-request --quiet s3://unirep-public/64_weights/ 64_weights/')
     
     # Import the mLSTM babbler model
     from unirep import babbler64 as babbler
@@ -50,7 +50,7 @@ else:
 
 # Initialize UniRep, also referred to as the "babbler" in our code. You need to provide the batch size you will use and the path to the weight directory.
 
-# In[3]:
+# In[7]:
 
 
 batch_size = 12
@@ -59,13 +59,13 @@ b = babbler(batch_size=batch_size, model_path=MODEL_WEIGHT_PATH)
 
 # UniRep needs to receive data in the correct format, a (batch_size, max_seq_len) matrix with integer values, where the integers correspond to an amino acid label at that position, and the end of the sequence is padded with 0s until the max sequence length to form a non-ragged rectangular matrix. We provide a formatting function to translate a string of amino acids into a list of integers with the correct codex:
 
-# In[4]:
+# In[8]:
 
 
 seq = "MRKGEELFTGVVPILVELDGDVNGHKFSVRGEGEGDATNGKLTLKFICTTGKLPVPWPTLVTTLTYGVQCFARYPDHMKQHDFFKSAMPEGYVQERTISFKDDGTYKTRAEVKFEGDTLVNRIELKGIDFKEDGNILGHKLEYNFNSHNVYITADKQKNGIKANFKIRHNVEDGSVQLADHYQQNTPIGDGPVLLPDNHYLSTQSVLSKDPNEKRDHMVLLEFVTAAGITHGMDELYK"
 
 
-# In[5]:
+# In[9]:
 
 
 np.array(b.format_seq(seq))
@@ -73,7 +73,7 @@ np.array(b.format_seq(seq))
 
 # We also provide a function that will check your amino acid sequences don't contain any characters which will break the UniRep model.
 
-# In[6]:
+# In[10]:
 
 
 b.is_valid_seq(seq)
@@ -85,7 +85,7 @@ b.is_valid_seq(seq)
 # 
 # Sequence formatting can be done as follows:
 
-# In[7]:
+# In[11]:
 
 
 # Before you can train your model, 
@@ -101,10 +101,10 @@ with open("seqs.txt", "r") as source:
 
 # This is what the integer format looks like
 
-# In[8]:
+# In[12]:
 
 
-get_ipython().system('head -n1 formatted.txt')
+#get_ipython().system('head -n1 formatted.txt')
 
 
 # Notice that by default format_seq does not include the stop symbol (25) at the end of the sequence. This is the correct behavior if you are trying to train a top model, but not if you are training UniRep representations.
@@ -119,7 +119,7 @@ get_ipython().system('head -n1 formatted.txt')
 # - Automatically padding the sequences with zeros so the returned batch is a perfect rectangle
 # - Automatically repeating the dataset
 
-# In[9]:
+# In[15]:
 
 
 bucket_op = b.bucket_batch_pad("formatted.txt", interval=1000) # Large interval
@@ -150,7 +150,7 @@ print(batch.shape)
 
 # First, obtain all of the ops needed to output a representation
 
-# In[13]:
+# In[3]:
 
 
 final_hidden, x_placeholder, batch_size_placeholder, seq_length_placeholder, initial_state_placeholder = (
@@ -167,7 +167,7 @@ final_hidden, x_placeholder, batch_size_placeholder, seq_length_placeholder, ini
 # 
 # 3.  Minimizing the loss inside of a TensorFlow session
 
-# In[17]:
+# In[4]:
 
 
 y_placeholder = tf.placeholder(tf.float32, shape=[None,1], name="y")
@@ -200,17 +200,24 @@ all_step_op = optimizer.minimize(loss)
 # In[19]:
 
 
-
+def nonpad_len(batch):
+    nonzero = batch > 0
+    lengths = np.sum(nonzero, axis=1)
+    return lengths
 
 nonpad_len(batch)
 
 
 # We are ready to train. As an illustration, let's learn to predict the number 42 just optimizing the top model.
 
-# In[16]:
+# In[2]:
 
 
 y = [[42]]*batch_size
+
+print(y)
+print(type(y))
+print(y.shape)
 num_iters = 10
 with tf.Session() as sess:
     sess.run(tf.global_variables_initializer())

@@ -119,7 +119,8 @@ def model_fn(features, labels, mode, params):
     batch_size = params['batch_size']
     learning_rate = params['lr']
 
-    y = tf.fill([1], 42 * batch_size)
+    y = features
+    #y = tf.fill([1], 42 * batch_size)
     rnn = unirep.mLSTMCell1900(rnn_size,
                     model_path=model_path,
                         wn=True)
@@ -165,7 +166,7 @@ def model_fn(features, labels, mode, params):
     # Loss
     batch_losses = tf.contrib.seq2seq.sequence_loss(
         logits,
-        tf.cast(features, tf.int32),
+        tf.cast(pad_adjusted_targets, tf.int32),
         #tf.cast(pad_adjusted_targets, tf.int32),
         tf.cast(mask, tf.float32),
         average_across_batch=False
@@ -231,6 +232,7 @@ if __name__ == '__main__':
     ]
     logging.getLogger('tensorflow').handlers = handlers
     estimator = tf.estimator.Estimator(model_fn=model_fn,
+                                       model_dir="results/",
                                        params={
                                            'batch_size': 12,
                                            'model_path': "./1900_weights",
