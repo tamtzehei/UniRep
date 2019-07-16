@@ -2,11 +2,26 @@ import os
 import argparse
 import sagemaker
 from sagemaker import get_execution_role
+from sagemaker.session import Session
+
 from sagemaker.tensorflow import TensorFlow
 
 import tensorflow as tf
 
 if __name__ == '__main__':
+
+    # S3 bucket for saving code and model artifacts.
+    # Feel free to specify a different bucket here if you wish.
+    bucket = "ttam-sagemaker-test"#Session().default_bucket()
+
+    # Location to save your custom code in tar.gz format.
+    custom_code_upload_location = 's3://{}/customcode/tensorflow_iris'.format(bucket)
+
+    # Location where results of model training are saved.
+    model_artifacts_location = 's3://{}/artifacts'.format(bucket)
+
+    # IAM execution role that gives SageMaker access to resources in your AWS account.
+    role = get_execution_role()
 
     # Parser
     parser = argparse.ArgumentParser()
@@ -38,4 +53,4 @@ if __name__ == '__main__':
                            train_instance_type='ml.p2.xlarge')
 
     # TODO figure out inputs
-    estimator.fit()
+    estimator.fit('s3://{}/unirep'.format(bucket))
