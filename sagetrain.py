@@ -29,7 +29,7 @@ if __name__ == '__main__':
 
     # TODO get dataset ready
 
-    estimator = TensorFlow(entry_point='estimator_test.py',
+    estimator = TensorFlow(entry_point='unirep_estimator.py',
                            role=role,
                            framework_version='1.14.0',
                            training_steps=1000,
